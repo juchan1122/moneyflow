@@ -1,0 +1,496 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<title>돈관리 앱 요구사항 명세서</title>
+<style>
+  @page {
+    size: A4;
+    margin: 18mm 16mm 18mm 16mm;
+    @bottom-center { content: counter(page) " / " counter(pages); font: 9pt "Malgun Gothic", sans-serif; color: #666; }
+    @top-right { content: "돈관리 앱 요구사항 명세서 · v0.1"; font: 8pt "Malgun Gothic", sans-serif; color: #888; }
+  }
+  @page :first { @top-right { content: none; } @bottom-center { content: none; } }
+
+  * { box-sizing: border-box; }
+  body {
+    font-family: "Malgun Gothic", "맑은 고딕", "Segoe UI Emoji", sans-serif;
+    font-size: 10.5pt; line-height: 1.6; color: #1a1a1a; margin: 0;
+    -webkit-print-color-adjust: exact; print-color-adjust: exact;
+  }
+  h1, h2, h3 { font-weight: 700; break-after: avoid; }
+  h2 {
+    font-size: 15pt; margin: 22pt 0 8pt; padding: 0 0 4pt;
+    border-bottom: 2px solid #1f4e79; color: #1f4e79;
+  }
+  h3 { font-size: 12pt; margin: 14pt 0 5pt; color: #222; }
+  h3::before { content: ""; display: inline-block; width: 4pt; height: 11pt; background: #1f4e79; margin-right: 6pt; vertical-align: -1pt; }
+  p { margin: 4pt 0; }
+  ul, ol { margin: 4pt 0 6pt; padding-left: 16pt; }
+  li { margin: 1.5pt 0; }
+  code { font-family: Consolas, monospace; font-size: 9pt; background: #f0f0f0; padding: 0 3pt; border-radius: 2pt; }
+
+  table { width: 100%; border-collapse: collapse; margin: 6pt 0 10pt; font-size: 9.5pt; break-inside: auto; }
+  tr { break-inside: avoid; }
+  thead { display: table-header-group; }
+  th, td { border: 1px solid #9aa7b4; padding: 4pt 6pt; vertical-align: top; text-align: left; }
+  th { background: #dfe8f1; font-weight: 700; }
+  td:first-child { font-weight: 600; white-space: nowrap; }
+  table.plain td:first-child { font-weight: 400; white-space: normal; }
+
+  .box { border: 1px solid #b7c4d1; border-left: 4pt solid #1f4e79; background: #f4f7fa; padding: 7pt 10pt; margin: 8pt 0; break-inside: avoid; }
+  .box.warn { border-left-color: #c55a11; background: #fdf5ef; }
+  .box b { color: #1f4e79; }
+  .muted { color: #555; font-size: 9.5pt; }
+
+  .check { list-style: none; padding-left: 4pt; }
+  .check li::before { content: "☐  "; font-size: 11pt; }
+  .check li.done::before { content: "☑  "; }
+
+  .phase { border: 1px solid #b7c4d1; border-radius: 4pt; padding: 6pt 10pt; margin: 7pt 0; break-inside: avoid; }
+  .phase .tag { display: inline-block; background: #1f4e79; color: #fff; font-weight: 700; font-size: 9pt; padding: 1pt 7pt; border-radius: 3pt; margin-right: 6pt; }
+  .phase .now { background: #c55a11; }
+  .phase h4 { display: inline; font-size: 11pt; margin: 0; }
+  .phase ul { margin-top: 4pt; }
+
+  .pagebreak { break-before: page; }
+
+  /* 표지 */
+  .cover { height: 250mm; display: flex; flex-direction: column; justify-content: center; }
+  .cover .kicker { font-size: 12pt; color: #1f4e79; font-weight: 700; letter-spacing: 1pt; }
+  .cover h1 { font-size: 30pt; margin: 6pt 0 10pt; color: #111; }
+  .cover .sub { font-size: 13pt; color: #333; margin-bottom: 30pt; }
+  .cover table { width: 70%; font-size: 10.5pt; }
+  .cover td:first-child { width: 30%; background: #f4f7fa; }
+  .toc { margin-top: 30pt; columns: 2; font-size: 10.5pt; }
+  .toc div { margin: 2pt 0; }
+</style>
+</head>
+<body>
+
+<!-- 표지 -->
+<section class="cover">
+  <div class="kicker">REQUIREMENTS SPECIFICATION</div>
+  <h1>💸 돈관리 앱<br>요구사항 명세서</h1>
+  <div class="sub">매일 쓴 돈을 빠르게 기록하고, "이번 달 내가 너무 충동적이었는지"를<br>스스로 확인하는 개인용 돈관리 웹/앱</div>
+  <table>
+    <tr><td>버전</td><td>v0.1 (초안)</td></tr>
+    <tr><td>작성일</td><td>2026-11-09</td></tr>
+    <tr><td>상태</td><td>0단계 · 기획</td></tr>
+    <tr><td>사용자</td><td>당분간 본인 1명 → 추후 공개</td></tr>
+    <tr><td>플랫폼</td><td>PWA (PC 웹 + 폰 설치) → 안드로이드 앱</td></tr>
+  </table>
+  <div class="toc">
+    <div>1. 확정된 결정 사항</div>
+    <div>2. 분류 체계</div>
+    <div>3. 충동 판정 규칙</div>
+    <div>4. 기능 요구사항</div>
+    <div>5. 플랫폼별 기능</div>
+    <div>6. 데이터 구조 (초안)</div>
+    <div>7. 기술 스택</div>
+    <div>8. 로드맵</div>
+    <div>9. 열린 질문</div>
+  </div>
+</section>
+
+<!-- 1 -->
+<h2 class="pagebreak">1. 확정된 결정 사항</h2>
+<table>
+  <thead><tr><th style="width:22%">항목</th><th>결정</th></tr></thead>
+  <tr><td>사용자</td><td>당분간 혼자 사용. DB는 처음부터 <code>user_id</code> 포함 (다중 사용자 대비)</td></tr>
+  <tr><td>수입 관리</td><td>보류. 월 예산은 직접 입력. DB에 <code>type: 지출/수입</code> 필드만 미리 준비</td></tr>
+  <tr><td>분류 체계</td><td>종류 + 필요도(🟢🟡🔴) + 감정 태그</td></tr>
+  <tr><td>충동 판정</td><td>월 충동 용돈 10만 원, 이월 없음, 초과분은 🔴</td></tr>
+  <tr><td>주간 페이스</td><td>표시함 (경고만 하고 막지 않음)</td></tr>
+  <tr><td>한 건 상한선</td><td>5만 원 이상 충동은 즉시 🔴 (끌 수 있음)</td></tr>
+  <tr><td>충동 의심 질문</td><td>넣음 (새벽 시간, 배달/쇼핑 등)</td></tr>
+  <tr><td>충동 구독</td><td><b>충동 한도와 별도 집계</b> + 재검토 알림으로 관리</td></tr>
+  <tr><td>결제수단</td><td>카드 이름별 등록. 신용카드는 결제일과 예정 출금액 표시. 현금 잔액 추적은 제외</td></tr>
+  <tr><td>카드 내역</td><td>1단계: 직접 입력 + 카드 내역 엑셀 업로드 / 3단계: 결제 알림 자동 인식</td></tr>
+  <tr><td>플랫폼</td><td>1단계: PWA / 3단계: 안드로이드 네이티브 앱</td></tr>
+  <tr><td>추가 기능</td><td>할부 관리, 즐겨찾기 템플릿, 키우는 화분, AI 월간 코치, 백업/내보내기, Google 캘린더 연동</td></tr>
+  <tr><td>제외 / 추후</td><td>카드 실적 추적 ❌ 제외 · 음성 입력 ⏳ 추후</td></tr>
+</table>
+
+<!-- 2 -->
+<h2>2. 분류 체계</h2>
+<h3>2-1. 종류 (무엇에)</h3>
+<p>식비, 카페/간식, 술/모임, 쇼핑, 교통, 주거, 통신, 구독, 의료, 자기계발, 경조사, 기타</p>
+<p class="muted">구독 세부 분류: AI(Claude, ChatGPT 등), 영상(OTT), 음악, 클라우드, 게임, 기타</p>
+
+<h3>2-2. 필요도 (왜)</h3>
+<table>
+  <thead><tr><th style="width:22%">표시</th><th>의미</th><th style="width:16%">선택</th></tr></thead>
+  <tr><td>🟢 필수</td><td>생활에 꼭 필요한 지출</td><td>직접</td></tr>
+  <tr><td>🟡 계획</td><td>미리 생각해둔 선택 지출</td><td>직접</td></tr>
+  <tr><td>🟠 허용 충동</td><td>충동 누적이 월 한도 이하</td><td>자동 판정</td></tr>
+  <tr><td>🔴 초과 충동</td><td>충동 누적이 월 한도 초과, 또는 한 건 상한 초과</td><td>자동 판정</td></tr>
+</table>
+<p>기록할 때는 🟢 필수 / 🟡 계획 / 🔴 충동 중 하나만 고르고, 🟠/🔴 구분은 앱이 자동으로 계산한다.</p>
+
+<h3>2-3. 감정 태그 (선택)</h3>
+<p>스트레스, 심심함, 기분 좋음, 친구 분위기, 배고픔, 보상심리 (사용자가 편집 가능)</p>
+
+<!-- 3 -->
+<h2 class="pagebreak">3. 충동 판정 규칙</h2>
+<h3>3-1. 월 충동 용돈</h3>
+<ul>
+  <li>기본 한도: <b>100,000원/월</b></li>
+  <li>이월: <b>없음</b> (매달 1일 다시 10만 원)</li>
+  <li>충동 누적이 한도 이하이면 🟠, 넘는 부분부터 🔴</li>
+  <li>한 건이 한도를 걸치면 금액을 나눠서 판정</li>
+</ul>
+<div class="box">
+  <b>예시 (한도 10만 원)</b><br>
+  3일 충동 배달 2만 → 누적 2만 🟠<br>
+  10일 충동 쇼핑 7만 → 누적 9만 🟠<br>
+  15일 친구 2차 술 3만 → 1만 🟠 + <b>2만 🔴</b><br>
+  이후 충동은 전부 🔴
+</div>
+
+<h3>3-2. 한 건 상한선</h3>
+<ul>
+  <li>기본 <b>50,000원</b>. 충동 1건이 이 금액 이상이면 한도가 남아 있어도 🔴</li>
+  <li>설정에서 끌 수 있음</li>
+</ul>
+
+<h3>3-3. 주간 페이스</h3>
+<ul>
+  <li>월 한도 ÷ 그달 주 수 = 주간 권장액 (예: 약 2.5만 원)</li>
+  <li>"이번 주 권장 2.5만 중 1.8만 사용"으로 표시. <b>경고만 하고 막지 않음</b></li>
+</ul>
+
+<h3>3-4. 충동 의심 질문</h3>
+<p>🟢/🟡로 기록했지만 아래 조건에 해당하면 한 번 되묻는다. 최종 판단은 사용자가 한다.</p>
+<ul>
+  <li>밤 11시 ~ 새벽 4시 지출</li>
+  <li>배달 앱, 쇼핑몰 지출</li>
+  <li>같은 날 같은 종류에 3번 이상 지출</li>
+</ul>
+<div class="box">예: "새벽 배달인데 진짜 필수였어? [필수 맞음] [충동으로 바꾸기]"</div>
+
+<h3>3-5. 충동 구독 (별도 집계)</h3>
+<ul>
+  <li>필요도가 🔴인 구독은 <b>월 충동 용돈에서 차감하지 않음</b></li>
+  <li>대신 "충동 구독 월 ○원"을 별도 지표로 표시</li>
+  <li>구독 재검토 알림으로 관리 (4-6 참고)</li>
+</ul>
+
+<h3>3-6. 남은 충동 용돈 = 참은 돈</h3>
+<ul>
+  <li>월말에 <code>충동 한도 − 충동 지출</code>을 "참은 돈"으로 기록 (생활비가 아니라 충동 용돈 기준)</li>
+  <li>이월은 안 하지만 <b>누적 기록</b>을 보여줌: "올해 참은 돈 누적 186,000원"</li>
+  <li>저축 목표 진행률에 반영 가능</li>
+</ul>
+
+<!-- 4 -->
+<h2 class="pagebreak">4. 기능 요구사항</h2>
+
+<h3>4-1. 지출 기록</h3>
+<ul>
+  <li>입력 항목: 금액, 날짜, 종류, 필요도, 결제수단, 메모(선택), 감정 태그(선택)</li>
+  <li><b>3초 입력:</b> 금액 → 종류 아이콘 → 필요도 탭 → 저장</li>
+  <li><b>즐겨찾기 템플릿:</b> "점심 / 9,000 / 신한체크 / 🟢"를 원탭으로 기록</li>
+  <li><b>지난 날짜 입력:</b> 기본값 오늘, [어제] [그저께] [날짜 선택] 버튼</li>
+  <li>수정/삭제 가능</li>
+</ul>
+
+<h3>4-2. 하루 마감 (무지출 vs 미기록 구분)</h3>
+<ul>
+  <li>기록을 입력했거나 [오늘 무지출]을 누르면 그날은 ✅ 마감</li>
+  <li>마감 안 된 날은 달력에 ⚠️ 표시</li>
+  <li>다음 날 "어제 기록 안 했어요" 알림</li>
+</ul>
+
+<h3>4-3. 결제수단</h3>
+<ul>
+  <li>등록 항목: 이름(예: 현대 신용카드), 종류(현금/체크/신용/계좌이체/간편결제), 신용카드는 결제일과 사용 기간</li>
+  <li>신용카드별 이번 달 사용액 + 다음 결제일 예정 출금액 표시</li>
+</ul>
+
+<h3>4-4. 할부 관리</h3>
+<ul>
+  <li>등록: 항목명, 총액, 개월 수, 시작 월, 카드</li>
+  <li>매달 할부금이 자동으로 잡힘</li>
+  <li>"남은 할부 4회 / 80만 원" 표시. 신용카드 예정 출금액에 포함</li>
+</ul>
+
+<h3>4-5. 고정 지출</h3>
+<ul>
+  <li>항목, 금액, 출금일, 주기(매월/매년/매주), 결제수단, 필요도</li>
+  <li>예: 월세, 통신비, 보험, 적금, 대출 이자</li>
+  <li>날짜가 되면 자동 기록. 금액이 바뀌는 항목(전기세 등)은 확인 요청</li>
+</ul>
+
+<h3>4-6. 구독 관리</h3>
+<table>
+  <thead><tr><th style="width:22%">항목</th><th>예시</th></tr></thead>
+  <tr><td>이름 / 요금제</td><td>Claude / Max</td></tr>
+  <tr><td>세부 분류</td><td>AI</td></tr>
+  <tr><td>금액, 결제일, 카드</td><td>매달 ○일, 현대카드</td></tr>
+  <tr><td>필요도</td><td>🟢 / 🟡 / 🔴</td></tr>
+  <tr><td>상태</td><td>사용중 / 해지 예정 / 해지됨</td></tr>
+  <tr><td>시작일 / 해지일</td><td></td></tr>
+  <tr><td>변경 이력</td><td>2026-09 Pro 🟢 → 2026-11 Max 업그레이드 🔴</td></tr>
+</table>
+<ul>
+  <li><b>구독 재검토 알림:</b> 시작 후 1개월, 3개월마다 "아직 필요해? [유지] [다운그레이드] [해지]"</li>
+  <li><b>무료 체험 종료 알림:</b> "3일 후 유료 전환돼요"</li>
+  <li>구독 총액 표시: "구독료 매달 67,000원, 1년이면 80만 원"</li>
+</ul>
+
+<h3>4-7. 예산</h3>
+<ul>
+  <li>월 전체 예산, 종류별 예산</li>
+  <li><b>오늘 쓸 수 있는 돈</b> = (월 예산 − 고정 지출 − 지금까지 쓴 돈) ÷ 남은 일수</li>
+</ul>
+
+<h3>4-8. 목표</h3>
+<table>
+  <thead><tr><th style="width:22%">종류</th><th>예시</th></tr></thead>
+  <tr><td>지출 한도</td><td>월 예산 / 충동 한도</td></tr>
+  <tr><td>종류별</td><td>술/모임 월 10만 원 이하</td></tr>
+  <tr><td>행동</td><td>배달 주 2회 이하, 무지출 날 월 4일, 새벽 결제 0회</td></tr>
+  <tr><td>감소</td><td>충동 지출 지난달 대비 20% 감소</td></tr>
+  <tr><td>저축</td><td>여행 자금 300만 원, 2027년 6월까지 (참은 돈과 연결)</td></tr>
+</table>
+<p class="muted">처음에는 행동 목표 1~2개 + 저축 목표 1개만 사용하는 것을 권장.</p>
+
+<h3>4-9. 충동 금액 환산</h3>
+<ul>
+  <li><b>물건 단위:</b> 사용자가 단위 등록 (커피 4,500 / 치킨 23,000 / 제주도 왕복 120,000) → "이번 달 충동 = 치킨 6마리"</li>
+  <li><b>목표 단위:</b> "초과 충동 4.2만 = 여행 자금 목표의 1.4%, 달성 5일 늦어짐"</li>
+  <li><b>1년 예상치:</b> "지금 페이스면 1년 충동 170만 원"</li>
+  <li><b>노동 시간 (선택):</b> 시급 입력 시 "이번 달 충동 = 11.8시간 일한 돈"</li>
+  <li>표시 위치: 충동 기록 직후 한 줄, 월말 리포트, 위젯(선택)</li>
+</ul>
+
+<h3>4-10. 돌아보기</h3>
+<ul>
+  <li><b>후회 리뷰:</b> 충동/계획 지출 일주일 후 "만족했어? 👍/👎" → 후회율 높은 소비 분석</li>
+  <li><b>사고 싶은 것 목록:</b> 등록하고 48시간 후 "아직도 사고 싶어?"</li>
+  <li><b>무지출 챌린지, 연속 기록, 배지</b></li>
+  <li><b>키우는 화분:</b> 목표를 지키면 자라고, 초과하면 시듦. 위젯에도 표시</li>
+</ul>
+
+<h3>4-11. AI 월간 소비 코치</h3>
+<ul>
+  <li>월말에 그달 데이터 요약을 Claude API로 보내 코칭 문장 생성</li>
+  <li>개인정보 최소화: 금액, 종류, 필요도, 요일/시간대 같은 집계값 위주로 전송</li>
+</ul>
+<div class="box">예: "이번 달 충동 지출의 60%가 금요일 밤 술자리였어요. 금요일 2차를 한 번만 줄이면 한도 안에 들어와요."</div>
+
+<h3>4-12. 카드 내역 엑셀 업로드 (웹)</h3>
+<ul>
+  <li>카드사 이용내역 엑셀/CSV 업로드</li>
+  <li>규칙 자동 분류 ("스타벅스 → 카페")</li>
+  <li>이미 기록한 거래와 중복 감지 (같은 금액 + 비슷한 시간)</li>
+  <li>용도: 한 달에 한 번 빠진 거래 찾기</li>
+</ul>
+
+<h3>4-13. Google 캘린더 연동</h3>
+<p><b>A. 앱 → 캘린더 (지출 표시)</b></p>
+<ul>
+  <li>앱 전용 "가계부" 캘린더를 만들어 거기에만 기록 (기존 일정과 분리, 켜고 끄기 가능)</li>
+  <li><b>하루 요약 (종일 일정):</b> "💸 52,000원 · 🔴 18,000", 설명에 상세 내역 + 남은 충동 용돈</li>
+  <li>제목 이모지로 그날 상태 표시: 충동 없음 🟢 / 허용 충동 🟠 / 초과 충동 🔴</li>
+  <li><b>미래 일정:</b> 고정 지출(D-3 알림), 구독(D-1), 신용카드 출금 예정액(D-3, 사용액에 따라 자동 업데이트), 할부 회차</li>
+</ul>
+<p><b>B. 캘린더 → 앱 (일정 분석)</b></p>
+<ul>
+  <li>약속 있는 날 vs 없는 날 평균 지출 비교</li>
+  <li>특정 일정(예: 동기 모임)과 충동 지출의 관계</li>
+  <li>전날 알림: "내일 친구 모임 일정이 있어요. 남은 충동 용돈 3.2만 원"</li>
+  <li>지출 기록에 그날 일정 자동 연결. 일정은 제목과 시간만 사용</li>
+</ul>
+<p class="muted">기술: Google OAuth + Google Calendar API. 하루 요약은 서버 예약 작업으로 작성.</p>
+
+<h3>4-14. 알림</h3>
+<table>
+  <thead><tr><th style="width:32%">알림</th><th>시점 / 내용</th></tr></thead>
+  <tr><td>하루 기록 리마인더</td><td>매일 22시 (변경 가능). 기록 있으면 요약, 없으면 [오늘 무지출] 버튼</td></tr>
+  <tr><td>어제 미기록</td><td>다음 날</td></tr>
+  <tr><td>고정 지출 / 카드 출금</td><td>D-3</td></tr>
+  <tr><td>구독 결제</td><td>D-1</td></tr>
+  <tr><td>구독 재검토</td><td>시작 후 1개월, 3개월마다</td></tr>
+  <tr><td>무료 체험 종료</td><td>D-3</td></tr>
+  <tr><td>후회 리뷰</td><td>지출 7일 후</td></tr>
+  <tr><td>내일 약속 + 남은 충동 용돈</td><td>전날 (캘린더 연동 시)</td></tr>
+</table>
+
+<h3>4-15. 데이터 안전</h3>
+<ul>
+  <li>엑셀/CSV 내보내기</li>
+  <li>자동 백업</li>
+</ul>
+
+<!-- 5 -->
+<h2 class="pagebreak">5. 플랫폼별 기능</h2>
+<h3>5-1. 웹 (PC · 분석, 관리, 계획)</h3>
+<ul>
+  <li>대시보드: 월별 지출 추이, 종류별 비율, 필수/계획/충동 비율의 월별 변화</li>
+  <li>달력 히트맵 (지출 많을수록 진하게, 마감 안 된 날 ⚠️)</li>
+  <li>충동 리포트: 요일별, 시간대별, 감정별, 충동 Top 5, 전월 대비</li>
+  <li>카드 내역 엑셀 업로드, 여러 건 일괄 수정</li>
+  <li>고정 지출, 구독, 할부, 카드, 목표 관리 화면</li>
+  <li>월간 리포트 + AI 코치</li>
+  <li>설정 (카테고리, 감정 태그, 예산, 한도, 환산 단위, 분류 규칙)</li>
+</ul>
+
+<h3>5-2. 폰 (PWA → 안드로이드 앱 · 빠른 기록)</h3>
+<ul>
+  <li>3초 입력, 즐겨찾기 템플릿</li>
+  <li>오늘 쓸 수 있는 돈, 충동 게이지, 주간 페이스</li>
+  <li>하루 마감, 각종 알림</li>
+  <li>오프라인 입력 후 동기화</li>
+</ul>
+
+<h3>5-3. 폰 위젯 (3단계 · 안드로이드 앱 필요)</h3>
+<p>PWA로는 위젯을 만들 수 없어서 안드로이드 앱 단계에서 결제 알림 인식과 함께 구현한다.</p>
+<table>
+  <thead><tr><th style="width:22%">크기</th><th>내용</th></tr></thead>
+  <tr><td>작은 (2x1)</td><td>오늘 남은 돈</td></tr>
+  <tr><td>중간 (4x2)</td><td>오늘 남은 돈, 충동 게이지(🟢→🟡→🔴), 주간 페이스, [+ 빠른 기록]</td></tr>
+  <tr><td>큰 (4x4)</td><td>위 내용 + 종류별 막대 그래프 + 다음 고정 지출 D-day</td></tr>
+</table>
+
+<h3>5-4. PC 바탕화면 위젯</h3>
+<table>
+  <thead><tr><th style="width:26%">방법</th><th style="width:14%">단계</th><th>설명</th></tr></thead>
+  <tr><td>PWA 미니 창</td><td>1단계</td><td>설치된 웹 창을 작게 띄움</td></tr>
+  <tr><td>항상 위 미니 창</td><td>1단계</td><td>크롬 Document PiP로 그래프 창을 항상 맨 위에</td></tr>
+  <tr><td>진짜 데스크톱 위젯</td><td>3.5단계</td><td>Tauri로 웹 코드를 재사용해 바탕화면 위젯 제작</td></tr>
+</table>
+<p class="muted">표시 내용: 일별 지출 미니 그래프, 필수/계획/충동 도넛, 충동 게이지 + 주간 페이스, 다가오는 고정 지출/구독, 마감 안 된 날 ⚠️, 화분</p>
+
+<h3>5-5. 결제 알림 자동 인식 (3단계 · 안드로이드만)</h3>
+<ol>
+  <li>카드사 앱 결제 푸시(또는 문자) 알림 켜기</li>
+  <li>내 앱에 안드로이드 "알림 접근 권한" 허용</li>
+  <li><code>NotificationListenerService</code>로 카드사 앱 알림만 골라 정규식으로 카드, 금액, 가게, 시간 추출</li>
+  <li>"분류 대기"로 저장 → 내 앱 알림에서 [🟢] [🟡] [🔴] 탭으로 기록 완료</li>
+  <li>취소 알림이 오면 자동 취소, 직접 입력한 건과 중복 확인</li>
+</ol>
+<div class="box warn">아이폰은 다른 앱의 알림을 읽을 수 없어서 불가능. 혼자 쓸 때는 APK를 직접 설치하면 돼서 플레이스토어 심사가 필요 없음.</div>
+
+<!-- 6 -->
+<h2 class="pagebreak">6. 데이터 구조 (초안)</h2>
+<table>
+  <thead><tr><th style="width:24%">테이블</th><th>주요 필드</th></tr></thead>
+  <tr><td>users</td><td>id, 이름, 설정(충동 한도, 상한선, 알림 시간, 시급)</td></tr>
+  <tr><td>transactions</td><td>id, user_id, type(지출/수입), 금액, 날짜시간, 종류, 필요도, 판정결과(🟢🟡🟠🔴), payment_method_id, 메모, 감정태그[], 출처(직접/엑셀/알림/고정지출/할부), calendar_event_id, 후회리뷰</td></tr>
+  <tr><td>payment_methods</td><td>id, user_id, 이름, 종류, 결제일, 사용기간 시작/끝일</td></tr>
+  <tr><td>recurring_expenses</td><td>id, user_id, 이름, 종류, 세부분류, 금액, 주기, 출금일, payment_method_id, 필요도, 상태, 시작일, 해지일, is_subscription</td></tr>
+  <tr><td>subscription_changes</td><td>id, recurring_id, 날짜, 이전/새 요금제, 이전/새 금액, 필요도</td></tr>
+  <tr><td>installments</td><td>id, user_id, 이름, 총액, 개월수, 시작월, payment_method_id</td></tr>
+  <tr><td>day_closings</td><td>user_id, 날짜, 상태(마감/무지출/미기록)</td></tr>
+  <tr><td>budgets</td><td>user_id, 월, 전체 예산, 종류별 예산</td></tr>
+  <tr><td>goals</td><td>id, user_id, 종류, 대상, 목표값, 기한, 진행값</td></tr>
+  <tr><td>templates</td><td>id, user_id, 이름, 금액, 종류, 필요도, payment_method_id</td></tr>
+  <tr><td>wishlist</td><td>id, user_id, 물건, 가격, 등록일, 결과</td></tr>
+  <tr><td>conversion_units</td><td>id, user_id, 이름, 이모지, 가격</td></tr>
+  <tr><td>category_rules</td><td>id, user_id, 키워드, 종류</td></tr>
+</table>
+
+<!-- 7 -->
+<h2>7. 기술 스택</h2>
+<table>
+  <thead><tr><th style="width:24%">영역</th><th>선택</th></tr></thead>
+  <tr><td>1단계 프론트</td><td>PWA (웹 하나로 PC + 폰 설치)</td></tr>
+  <tr><td>백엔드</td><td>Supabase (로그인, DB, 동기화, 예약 작업)</td></tr>
+  <tr><td>푸시 알림</td><td>Web Push (안드로이드 크롬, 아이폰은 홈 화면 설치 시)</td></tr>
+  <tr><td>3단계 폰 앱</td><td>Expo (React Native) 개발 빌드 + 알림 리스너/위젯 라이브러리</td></tr>
+  <tr><td>3.5단계 PC 위젯</td><td>Tauri</td></tr>
+  <tr><td>AI 코치</td><td>Claude API</td></tr>
+  <tr><td>캘린더</td><td>Google Calendar API</td></tr>
+</table>
+
+<!-- 8 -->
+<h2 class="pagebreak">8. 로드맵</h2>
+<p class="muted">각 단계는 직접 1~2주 써보고 불편한 점을 반영한 뒤 다음 단계로 넘어간다.</p>
+
+<div class="phase"><span class="tag now">0단계</span><h4>기획 (현재)</h4>
+  <ul class="check">
+    <li class="done">요구사항 조사</li>
+    <li>요구사항 명세서 확정</li>
+    <li>화면 설계 (폰 기록 화면, 웹 대시보드)</li>
+    <li>데이터 구조 확정</li>
+    <li>기술 스택 확정</li>
+  </ul></div>
+
+<div class="phase"><span class="tag">1단계</span><h4>MVP (PWA)</h4>
+  <ul class="check">
+    <li>로그인 (본인 1명)</li>
+    <li>지출 기록 (종류, 필요도, 카드, 메모, 지난 날짜)</li>
+    <li>즐겨찾기 템플릿</li>
+    <li>카드 등록 (신용카드 결제일, 예정 출금액)</li>
+    <li>할부 관리</li>
+    <li>고정 지출 + 구독 등록</li>
+    <li>월 예산, 오늘 쓸 수 있는 돈</li>
+    <li>충동 판정 (월 10만, 한 건 5만)</li>
+    <li>하루 마감 (무지출 / 미기록)</li>
+    <li>웹 기본 대시보드</li>
+    <li>PC 미니 창 / 항상 위 창</li>
+  </ul></div>
+
+<div class="phase"><span class="tag">1.5단계</span><h4>습관 만들기</h4>
+  <ul class="check">
+    <li>22시 리마인더, 어제 미기록 알림</li>
+    <li>고정 지출 / 카드 출금 D-3 알림</li>
+    <li>주간 페이스</li>
+    <li>충동 의심 질문</li>
+    <li>카드 내역 엑셀 업로드 + 빠진 거래 찾기</li>
+    <li>참은 돈 누적</li>
+    <li>데이터 내보내기 / 백업</li>
+  </ul></div>
+
+<div class="phase"><span class="tag">2단계</span><h4>돌아보기</h4>
+  <ul class="check">
+    <li>감정 태그 + 충동 리포트</li>
+    <li>후회 리뷰</li>
+    <li>구독 재검토 알림, 변경 이력, 충동 구독 별도 집계</li>
+    <li>사고 싶은 것 목록</li>
+    <li>목표 (행동 + 저축)</li>
+    <li>충동 금액 환산</li>
+    <li>AI 월간 소비 코치</li>
+    <li>무지출 챌린지, 연속 기록</li>
+    <li>Google 캘린더 연동 A (지출 표시)</li>
+  </ul></div>
+
+<div class="phase"><span class="tag">2.5단계</span><h4>캘린더 분석</h4>
+  <ul class="check">
+    <li>Google 캘린더 연동 B (일정과 지출 분석, 전날 알림)</li>
+  </ul></div>
+
+<div class="phase"><span class="tag">3단계</span><h4>안드로이드 앱</h4>
+  <ul class="check">
+    <li>결제 알림 자동 인식</li>
+    <li>폰 위젯 (작은/중간/큰)</li>
+  </ul></div>
+
+<div class="phase"><span class="tag">3.5단계</span><h4>PC 데스크톱 위젯</h4>
+  <ul class="check">
+    <li>Tauri 바탕화면 위젯</li>
+    <li>키우는 화분</li>
+  </ul></div>
+
+<div class="phase"><span class="tag">4단계</span><h4>공개</h4>
+  <ul class="check">
+    <li>회원가입, 보안 강화</li>
+    <li>수입 관리</li>
+    <li>아이폰 대응 점검</li>
+    <li>음성 입력</li>
+  </ul></div>
+
+<!-- 9 -->
+<h2>9. 열린 질문</h2>
+<table class="plain">
+  <thead><tr><th style="width:50%">질문</th><th>답 (직접 기입)</th></tr></thead>
+  <tr><td>☐ 월 전체 예산 금액</td><td style="height:26pt"></td></tr>
+  <tr><td>☐ 카테고리 목록 최종 확정</td><td style="height:26pt"></td></tr>
+  <tr><td>☐ 사용 중인 카드 목록과 결제일</td><td style="height:26pt"></td></tr>
+  <tr><td>☐ 첫 목표 (행동 목표 1~2개, 저축 목표 1개)</td><td style="height:26pt"></td></tr>
+</table>
+
+</body>
+</html>
