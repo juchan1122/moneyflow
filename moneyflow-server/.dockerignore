@@ -1,0 +1,8 @@
+# 이미지 빌드에 보내지 않을 것 (빌드 결과 · 캐시 · 에디터 파일)
+build/
+.gradle/
+.idea/
+*.iml
+HELP.md
+Dockerfile
+.dockerignore

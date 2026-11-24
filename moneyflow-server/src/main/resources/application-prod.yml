@@ -11,4 +11,5 @@ server:
   servlet:
     session:
       cookie:
-        secure: true
+        # HTTPS 에서만 쿠키를 보냄. 인증서 받기 전(http 모드)에만 .env 에서 false 로 (deploy/README.md)
+        secure: ${COOKIE_SECURE:true}
