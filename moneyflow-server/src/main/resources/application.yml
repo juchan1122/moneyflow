@@ -1,0 +1,35 @@
+# 공통 설정. 환경별 값은 application-{local,dev,prod}.yml (시스템 구조 v1.0 4장)
+spring:
+  application:
+    name: moneyflow-server
+  profiles:
+    default: local
+  jpa:
+    open-in-view: false
+    hibernate:
+      # 테이블은 Flyway(db/migration)가 만든다. JPA는 맞는지만 확인
+      ddl-auto: validate
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: Asia/Seoul
+  flyway:
+    locations: classpath:db/migration
+  jackson:
+    time-zone: Asia/Seoul
+
+server:
+  servlet:
+    session:
+      cookie:
+        http-only: true
+        same-site: lax
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never

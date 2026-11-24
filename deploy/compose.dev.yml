@@ -1,0 +1,25 @@
+# 개발용 MySQL 8 (dev 프로필). 운영용 compose는 TASK-47에서 만든다
+#   docker compose -f deploy/compose.dev.yml up -d
+#   서버 실행: ./gradlew bootRun --args='--spring.profiles.active=dev'
+# 아래 비밀번호는 내 PC 개발용이라 그대로 둬도 된다. 운영 값은 절대 여기에 넣지 않는다
+services:
+  mysql:
+    image: mysql:8.4
+    container_name: moneyflow-mysql-dev
+    ports:
+      - "3306:3306"
+    environment:
+      MYSQL_DATABASE: moneyflow
+      MYSQL_USER: moneyflow
+      MYSQL_PASSWORD: moneyflow
+      MYSQL_ROOT_PASSWORD: root
+      TZ: Asia/Seoul
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --default-time-zone=+09:00
+    volumes:
+      - mysql-dev-data:/var/lib/mysql
+
+volumes:
+  mysql-dev-data:
