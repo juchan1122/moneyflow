@@ -1,0 +1,52 @@
+# 서버 CI: PR을 열거나 main에 올라가면 서버 테스트를 돌린다
+# GitHub 러너에는 Docker가 있어서 MySQL Testcontainers 테스트도 여기서는 실제로 돈다
+name: server-ci
+
+on:
+  pull_request:
+    paths:
+      - "moneyflow-server/**"
+      - ".github/workflows/server-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "moneyflow-server/**"
+      - ".github/workflows/server-ci.yml"
+
+# 같은 PR에 새 커밋이 오면 이전 실행은 취소
+concurrency:
+  group: server-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    defaults:
+      run:
+        working-directory: moneyflow-server
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: "21"
+
+      - uses: gradle/actions/setup-gradle@v5
+
+      - name: 테스트
+        run: ./gradlew test --no-daemon
+        env:
+          TZ: Asia/Seoul
+
+      - name: 테스트 리포트 올리기 (실패했을 때)
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: test-report
+          path: moneyflow-server/build/reports/tests/test
+          retention-days: 7
