@@ -1,4 +1,4 @@
-# 개발용 MySQL 8 (dev 프로필). 운영용 compose는 TASK-47에서 만든다
+# 개발용 MySQL 8 (dev 프로필). 운영용은 compose.yml (README.md)
 #   docker compose -f deploy/compose.dev.yml up -d
 #   서버 실행: ./gradlew bootRun --args='--spring.profiles.active=dev'
 # 아래 비밀번호는 내 PC 개발용이라 그대로 둬도 된다. 운영 값은 절대 여기에 넣지 않는다

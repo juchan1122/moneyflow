@@ -1,0 +1,98 @@
+# 운영 서버 1대 = 이 파일 하나 (시스템 구조 v1.0 5장)
+#   web (nginx: 화면 파일 · /api 전달 · HTTPS) → server (Spring Boot) → db (MySQL 8)
+#   certbot 은 https 모드에서만 켜짐 (인증서 자동 갱신)
+#
+# 서버에서:  cd deploy && cp .env.example .env (값 채우기) && docker compose up -d --build
+# 자세한 순서는 deploy/README.md
+name: moneyflow
+
+services:
+  db:
+    image: mysql:8.4
+    restart: unless-stopped
+    environment:
+      MYSQL_DATABASE: moneyflow
+      MYSQL_USER: ${DB_USERNAME:?DB_USERNAME 를 .env 에 넣어 주세요}
+      MYSQL_PASSWORD: ${DB_PASSWORD:?DB_PASSWORD 를 .env 에 넣어 주세요}
+      MYSQL_ROOT_PASSWORD: ${DB_ROOT_PASSWORD:?DB_ROOT_PASSWORD 를 .env 에 넣어 주세요}
+      TZ: Asia/Seoul
+    command:
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_0900_ai_ci
+      - --default-time-zone=+09:00
+      - --innodb-buffer-pool-size=${MYSQL_BUFFER_POOL:-256M}
+    volumes:
+      - db-data:/var/lib/mysql
+    # 밖으로 포트를 열지 않음. server 만 접근
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "127.0.0.1", "--silent"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    logging: &logging
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
+
+  server:
+    build: ../moneyflow-server
+    image: ${SERVER_IMAGE:-moneyflow-server:local}
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_URL: jdbc:mysql://db:3306/moneyflow?characterEncoding=UTF-8&connectionTimeZone=Asia/Seoul
+      DB_USERNAME: ${DB_USERNAME}
+      DB_PASSWORD: ${DB_PASSWORD}
+      COOKIE_SECURE: ${COOKIE_SECURE:-true}
+      JAVA_OPTS: ${JAVA_OPTS:--Xms256m -Xmx768m}
+    # 밖으로 포트를 열지 않음. nginx 만 접근
+    healthcheck:
+      test: ["CMD", "curl", "-fsS", "http://127.0.0.1:8080/actuator/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+      start_period: 60s
+    logging: *logging
+
+  web:
+    build: ../moneyflow-web
+    image: ${WEB_IMAGE:-moneyflow-web:local}
+    restart: unless-stopped
+    depends_on:
+      server:
+        condition: service_healthy
+    ports:
+      - "${HTTP_PORT:-80}:80"
+      - "${HTTPS_PORT:-443}:443"
+    environment:
+      SERVER_NAME: ${SERVER_NAME:-_}
+    volumes:
+      # NGINX_MODE=http (인증서 전) / https (인증서 받은 뒤) 에 따라 설정 파일을 고름
+      - ./nginx/${NGINX_MODE:-http}.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./nginx/app.conf:/etc/nginx/snippets/app.conf:ro
+      - certbot-www:/var/www/certbot:ro
+      - certs:/etc/letsencrypt:ro
+    # 6시간마다 nginx 설정을 다시 읽음 → certbot 이 갱신한 인증서가 반영됨
+    command: ["/bin/sh", "-c", "while :; do sleep 6h; nginx -s reload; done & exec /docker-entrypoint.sh nginx -g 'daemon off;'"]
+    logging: *logging
+
+  certbot:
+    image: certbot/certbot:latest
+    profiles: ["https"]
+    restart: unless-stopped
+    volumes:
+      - certbot-www:/var/www/certbot
+      - certs:/etc/letsencrypt
+    # 12시간마다 갱신 시도 (만료 30일 전부터 실제로 갱신됨)
+    entrypoint: ["/bin/sh", "-c", "trap exit TERM; while :; do certbot renew --webroot -w /var/www/certbot --quiet; sleep 12h & wait $${!}; done"]
+    logging: *logging
+
+volumes:
+  db-data:
+  certbot-www:
+  certs:
