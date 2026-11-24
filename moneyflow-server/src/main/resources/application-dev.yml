@@ -1,0 +1,11 @@
+# dev: 내 PC에서 운영과 똑같이. MySQL 8은 deploy/compose.dev.yml로 띄운다
+#   docker compose -f deploy/compose.dev.yml up -d
+spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/moneyflow?characterEncoding=UTF-8&connectionTimeZone=Asia/Seoul
+    username: moneyflow
+    password: ${DB_PASSWORD:moneyflow}
+
+logging:
+  level:
+    org.hibernate.SQL: debug

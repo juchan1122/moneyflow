@@ -1,0 +1,14 @@
+# prod: 운영 서버. 값은 서버의 .env에서만 넣는다 (저장소에 올리지 않음)
+spring:
+  datasource:
+    url: ${DB_URL}
+    username: ${DB_USERNAME}
+    password: ${DB_PASSWORD}
+
+server:
+  # nginx 뒤에서 HTTPS를 알아보기 위해
+  forward-headers-strategy: native
+  servlet:
+    session:
+      cookie:
+        secure: true

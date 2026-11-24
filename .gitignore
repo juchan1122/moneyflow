@@ -1,0 +1,9 @@
+# 비밀값 (운영 서버 .env). 예시 파일만 올린다
+.env
+.env.*
+!.env.example
+
+# 에디터
+.idea/
+.vscode/
+*.iml
