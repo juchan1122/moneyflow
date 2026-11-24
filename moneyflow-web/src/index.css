@@ -1,0 +1,29 @@
+/* 기본 스타일만. 색 · 글꼴은 Figma 디자인 토큰으로 화면 작업 때 채운다 */
+:root {
+  --color-primary: #1f6f5c;
+  --color-text: #1a1a1a;
+  --color-text-sub: #6b6b6b;
+  --color-bg: #ffffff;
+  --color-danger: #d64545;
+
+  font-family: 'Pretendard', system-ui, -apple-system, 'Segoe UI', 'Apple SD Gothic Neo', 'Malgun Gothic', sans-serif;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+  -webkit-font-smoothing: antialiased;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100dvh;
+}
+
+button {
+  font: inherit;
+}
