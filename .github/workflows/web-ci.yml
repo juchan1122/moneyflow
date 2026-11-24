@@ -1,0 +1,48 @@
+# 프론트 CI: PR을 열거나 main에 올라가면 린트 · 테스트 · 빌드를 돌린다
+name: web-ci
+
+on:
+  pull_request:
+    paths:
+      - "moneyflow-web/**"
+      - ".github/workflows/web-ci.yml"
+  push:
+    branches: [main]
+    paths:
+      - "moneyflow-web/**"
+      - ".github/workflows/web-ci.yml"
+
+concurrency:
+  group: web-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: moneyflow-web
+    steps:
+      - uses: actions/checkout@v5
+
+      - uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+          cache: npm
+          cache-dependency-path: moneyflow-web/package-lock.json
+
+      - name: 설치
+        run: npm ci
+
+      - name: 린트
+        run: npm run lint
+
+      - name: 테스트
+        run: npm test
+
+      - name: 빌드 (타입 검사 포함)
+        run: npm run build
